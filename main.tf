@@ -294,7 +294,7 @@ variable "route_public_domain_name" {
 module "vpn" {
   create_vpn = var.create_vpc
 
-  source = "../tf_aws_openvpn"
+  source = "modules/tf_aws_openvpn"
 
   route_public_domain_name = var.route_public_domain_name
 
