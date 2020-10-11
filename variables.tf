@@ -1,5 +1,13 @@
 #vpc variables
 
+variable "firehawk_init_dependency" {
+  default = ""
+}
+
+variable "create_vpc" {
+  default = true
+}
+
 variable "region" {
   default = "ap-southeast-2"
 }
@@ -16,7 +24,7 @@ variable "enable_nat_gateway" {
 
 variable "vpc_name" {}
 
-variable "create_vpc" { default = true }
+
 
 variable "create_openvpn" {
   default = true
