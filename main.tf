@@ -257,33 +257,6 @@ resource "aws_route53_resolver_rule_association" "sys" {
   vpc_id           = local.vpc_id
 }
 
-# module "vpc" { # this can simplify things but it is an external dependency, so it is left here latent incase needed.
-#   source = "terraform-aws-modules/vpc/aws"
-#   version = "~> 2.44.0"
-
-#   create_vpc = var.create_vpc
-
-#   name = local.name
-#   cidr = var.vpc_cidr
-
-#   azs             = var.azs
-#   private_subnets = var.private_subnets
-#   public_subnets  = var.public_subnets
-
-#   # if sleep is true, then nat is disabled to save costs during idle time.
-#   enable_nat_gateway     = var.sleep || false == var.enable_nat_gateway ? false : true
-#   single_nat_gateway     = true
-#   one_nat_gateway_per_az = false
-
-#   #not sure if this is actually required - it seems mroe related to aws type vpn gateway as a paid service
-#   #enable_vpn_gateway = true
-
-#   enable_dns_support   = true
-#   enable_dns_hostnames = true
-
-#   tags = merge(map("Name", format("%s", local.name)), var.common_tags, local.extra_tags)
-  
-# }
 
 variable "remote_subnet_cidr" {
 }
