@@ -17,7 +17,7 @@ output "private_subnets" {
 
 output "private_subnets_cidr_blocks" {
   depends_on = [ aws_subnet.private_subnet ]
-  value = var.private_subnets
+  value = local.private_subnets_cidr_blocks
 }
 
 output "vpc_cidr" {
@@ -31,7 +31,7 @@ output "public_subnets" {
 
 output "public_subnets_cidr_blocks" {
   depends_on = [ aws_subnet.public_subnet ]
-  value = var.public_subnets
+  value = local.public_subnets_cidr_blocks
 }
 
 output "vpc_main_route_table_id" {
@@ -58,4 +58,12 @@ output "vpc_tags" {
 output "subnet_names" {
   depends_on = [ aws_vpc.main, aws_subnet.private_subnet ]
   value = local.subnet_names
+}
+
+output "bastion_public_ip" {
+  value = module.bastion.public_ip
+}
+
+output "bastion_private_ip" {
+  value = module.bastion.private_ip
 }
