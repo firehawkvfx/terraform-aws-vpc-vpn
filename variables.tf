@@ -112,6 +112,12 @@ variable "cert_arn" {
   default     = null
 }
 
+variable "create_vpn" {
+  description = "Initialise openVPN.  If you dont require a VPN for the VPC this can be set to false."
+  type = bool
+  default = false
+}
+
 variable "openvpn_user" {
   description = "The openVPN user name to connect the client gateway."
   type        = string

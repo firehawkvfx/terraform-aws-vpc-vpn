@@ -293,7 +293,7 @@ module "bastion" {
 }
 
 module "vpn" {
-  create_vpn = var.create_vpc
+  create_vpn = var.create_vpc && var.create_vpn
 
   source = "./modules/tf_aws_openvpn"
 
