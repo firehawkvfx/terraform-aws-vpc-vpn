@@ -1,7 +1,8 @@
 provider "aws" {
   #  if you haven't installed and configured the aws cli, you will need to provide your aws access key and secret key.
-  region = var.region
+  # region = var.region
   # version = "~> 3.0"
+  version = "~> 3.3.0"
 }
 
 resource "null_resource" "firehawk_init_dependency" {
@@ -62,7 +63,7 @@ locals {
   private_subnet2_id = element( concat( aws_subnet.private_subnet.*.id, list("")), 1 )
   public_subnets = aws_subnet.public_subnet.*.id
   public_subnets_cidr_blocks = var.public_subnets
-  private_subnets_cidr_blocks = var.private_subnets_cidr_blocks
+  # private_subnets_cidr_blocks = var.private_subnets_cidr_blocks
   private_route_table_ids = aws_route_table.private.*.id
   public_route_table_ids = aws_route_table.public.*.id
   private_route53_zone_id = element( concat( aws_route53_zone.private.*.id, list("")), 0 )
@@ -257,14 +258,11 @@ resource "aws_route53_resolver_rule_association" "sys" {
 module "bastion" {
   source = "./modules/bastion"
 
-  create_vpc = var.create_vpc
+  create_vpc = var.create_vpc && var.create_bastion
 
   name = "bastion_pipeid${lookup(var.common_tags, "pipelineid", "0")}"
 
   route_public_domain_name = var.route_public_domain_name
-
-  # region will determine the ami
-  region = var.aws_region
 
   #options for gateway type are centos7 and pcoip
   vpc_id                      = local.vpc_id
@@ -273,7 +271,7 @@ module "bastion" {
   remote_ip_cidr              = var.remote_ip_cidr
   public_subnet_ids           = local.public_subnets
   public_subnets_cidr_blocks  = local.public_subnets_cidr_blocks
-  private_subnets_cidr_blocks = local.private_subnets_cidr_blocks
+  # private_subnets_cidr_blocks = local.private_subnets_cidr_blocks
   remote_subnet_cidr          = var.remote_subnet_cidr
 
   aws_key_name       = var.aws_key_name
@@ -341,7 +339,7 @@ module "vpn" {
   openvpn_admin_user = var.openvpn_admin_user # Note: Don't choose "admin" username. Looks like it's already reserved.
   openvpn_admin_pw   = var.openvpn_admin_pw
 
-  bastion_ip = module.bastion.bastion_ip
+  bastion_ip = module.bastion.public_ip
   bastion_dependency = module.bastion.bastion_dependency
   firehawk_init_dependency = var.firehawk_init_dependency
 

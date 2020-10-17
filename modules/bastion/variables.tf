@@ -4,9 +4,6 @@ variable "name" {
 
 variable "create_vpc" {}
 
-variable "region" {
-}
-
 variable "vpc_id" {
 }
 
@@ -26,8 +23,8 @@ variable "public_subnets_cidr_blocks" {
 
 variable "route_public_domain_name" {}
 
-variable "private_subnets_cidr_blocks" {
-}
+# variable "private_subnets_cidr_blocks" {
+# }
 
 variable "remote_subnet_cidr" {
 }

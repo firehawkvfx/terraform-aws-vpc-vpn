@@ -15,10 +15,10 @@ output "private_subnets" {
   value = local.private_subnets
 }
 
-output "private_subnets_cidr_blocks" {
-  depends_on = [ aws_subnet.private_subnet ]
-  value = local.private_subnets_cidr_blocks
-}
+# output "private_subnets_cidr_blocks" {
+#   depends_on = [ aws_subnet.private_subnet ]
+#   value = local.private_subnets_cidr_blocks
+# }
 
 output "vpc_cidr" {
   value = var.vpc_cidr

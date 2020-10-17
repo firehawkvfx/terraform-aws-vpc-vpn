@@ -87,11 +87,11 @@ variable "aws_key_name" {
 variable "aws_private_key_path" {
   description = "The path to the AWS private PEM key for access to the VPN instance"
   type        = string
-  default     = null
+  default     = "~/.ssh/aws_key.pem"
 }
 
-locals {
-  private_key = file(var.aws_private_key_path)
+locals { # if no key exists then private_key is blank
+  private_key = fileexists(var.aws_private_key_path) ? file(var.aws_private_key_path) : ""
 }
 
 variable "route_zone_id" {
@@ -157,7 +157,7 @@ variable "vpc_name" {
 variable "common_tags" {
   description = "A map of common tags to assign to the resources created by this module"
   type        = map(string)
-  default     = null
+  default     = {}
 }
 
 variable "region" {
@@ -166,10 +166,16 @@ variable "region" {
   default     = null
 }
 
+variable "create_bastion" {
+  description = "Optionally create a bastion resource for the VPC"
+  type        = bool
+  default     = false
+}
+
 variable "create_openvpn" {
   description = "Optionally disable the VPN resource for the VPC"
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "instance_type" {
