@@ -62,7 +62,7 @@ variable "vpc_cidr" {
 
 variable "vpn_cidr" {
   description = "The CIDR range that the vpn will assign to remote addresses within the vpc.  These are virtual DHCP addresses for routing traffic."
-  type        = bool
+  type        = string
   default     = "172.19.232.0/24"
 }
 
