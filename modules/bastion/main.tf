@@ -100,7 +100,7 @@ variable "bastion_centos_ami_option" { # Where multiple data aws_ami_ids queries
 locals {
   keys = ["centos_v7"] # Where multiple data aws_ami_ids queries are available, this is the full list of options.
   empty_list = list("")
-  values = ["${element( concat(data.aws_ami_ids.centos_v7.ids, local.empty_list ), 0 )}"] # the list of ami id's
+  values = [ element( concat(data.aws_ami_ids.centos_v7.ids, local.empty_list ), 0 ) ] # the list of ami id's
   bastion_centos_consumption_map = zipmap( local.keys , local.values )
 }
 
@@ -112,7 +112,7 @@ data "aws_ami_ids" "prebuilt_bastion_centos_ami_list" { # search for a prebuilt 
   owners = ["self"]
   filter {
     name   = "tag:base_ami"
-    values = ["${local.base_ami}"]
+    values = [ local.base_ami ]
   }
   filter {
     name = "name"
@@ -124,7 +124,7 @@ locals {
   prebuilt_bastion_centos_ami_list = data.aws_ami_ids.prebuilt_bastion_centos_ami_list.ids
   first_element = element( data.aws_ami_ids.prebuilt_bastion_centos_ami_list.*.ids, 0)
   mod_list = concat( local.prebuilt_bastion_centos_ami_list , list("") )
-  aquired_ami      = "${element( local.mod_list , 0)}" # aquired ami will use the ami in the list if found, otherwise it will default to the original ami.
+  aquired_ami      = element( local.mod_list , 0) # aquired ami will use the ami in the list if found, otherwise it will default to the original ami.
   use_prebuilt_bastion_centos_ami = var.allow_prebuilt_bastion_centos_ami && length(local.mod_list) > 1 ? true : false
   ami = local.use_prebuilt_bastion_centos_ami ? local.aquired_ami : local.base_ami
 }
@@ -180,7 +180,7 @@ locals {
   private_ip = element(concat(aws_instance.bastion.*.private_ip, list("")), 0)
   id = element(concat(aws_instance.bastion.*.id, list("")), 0)
   security_group_id = element(concat(aws_security_group.bastion.*.id, list("")), 0)
-  bastion_address = var.route_public_domain_name ? "bastion.${var.public_domain_name}":"${local.public_ip}"
+  bastion_address = var.route_public_domain_name ? "bastion.${var.public_domain_name}" : local.public_ip
 }
 
 
