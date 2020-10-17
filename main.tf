@@ -178,7 +178,7 @@ resource "aws_route_table_association" "public_associations" {
 
 
 resource "aws_security_group" "resolver" {
-  count = var.create_vpc ? 1 : 0
+  count = var.create_vpc && var.create_vpn ? 1 : 0
   name        = format("resolver_%s", local.name)
   vpc_id      = local.vpc_id
   description = "Route 53 Resolver security group"
@@ -221,7 +221,7 @@ resource "aws_security_group" "resolver" {
 }
 
 resource "aws_route53_resolver_endpoint" "main" {
-  count = var.create_vpc ? 1 : 0
+  count = var.create_vpc && var.create_vpn ? 1 : 0
 
   name      = "main"
   direction = "INBOUND"
