@@ -4,6 +4,10 @@ variable "name" {
 
 variable "create_vpc" {}
 
+variable "create_vpn" {
+  default = false
+}
+
 variable "vpc_id" {
 }
 

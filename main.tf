@@ -259,6 +259,8 @@ module "bastion" {
   source = "./modules/bastion"
 
   create_vpc = var.create_vpc && var.create_bastion
+  
+  create_vpn = var.create_vpn
 
   name = "bastion_pipeid${lookup(var.common_tags, "pipelineid", "0")}"
 

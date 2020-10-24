@@ -4,6 +4,24 @@
 
 variable "common_tags" {}
 
+resource "aws_security_group" "bastion_vpn" {
+  count       = var.create_vpc ? 1 : 0
+  name        = "bastion_vpn"
+  vpc_id      = var.vpc_id
+  description = "Bastion Security Group"
+
+  tags = merge(map("Name", format("%s", var.name)), var.common_tags, local.extra_tags)
+
+  # todo need to replace this with correct protocols for pcoip instead of all ports.description
+  ingress {
+    protocol    = "-1"
+    from_port   = 0
+    to_port     = 0
+    cidr_blocks = [var.vpn_cidr, var.remote_subnet_cidr, "172.27.236.0/24"]
+    description = "all incoming traffic from remote access ip"
+  }
+}
+
 resource "aws_security_group" "bastion" {
   count       = var.create_vpc ? 1 : 0
   name        = var.name
@@ -18,15 +36,6 @@ resource "aws_security_group" "bastion" {
     to_port     = 0
     cidr_blocks = [var.vpc_cidr]
     description = "all incoming traffic from vpc"
-  }
-
-  # todo need to replace this with correct protocols for pcoip instead of all ports.description
-  ingress {
-    protocol    = "-1"
-    from_port   = 0
-    to_port     = 0
-    cidr_blocks = [var.vpn_cidr, var.remote_subnet_cidr, "172.27.236.0/24"]
-    description = "all incoming traffic from remote access ip"
   }
 
   # For OpenVPN Client Web Server & Admin Web UI
@@ -160,7 +169,7 @@ resource "aws_instance" "bastion" {
   key_name      = var.aws_key_name
   subnet_id     = element(concat(var.public_subnet_ids, list("")), 0)
 
-  vpc_security_group_ids = [local.security_group_id]
+  vpc_security_group_ids = local.vpc_security_group_ids
 
   root_block_device {
     delete_on_termination = true
@@ -179,7 +188,9 @@ locals {
   public_ip = element(concat(aws_eip.bastionip.*.public_ip, list("")), 0)
   private_ip = element(concat(aws_instance.bastion.*.private_ip, list("")), 0)
   id = element(concat(aws_instance.bastion.*.id, list("")), 0)
-  security_group_id = element(concat(aws_security_group.bastion.*.id, list("")), 0)
+  bastion_security_group_id = element(concat(aws_security_group.bastion.*.id, list("")), 0)
+  bastion_vpn_security_group_id = element(concat(aws_security_group.bastion_vpn.*.id, list("")), 0)
+  vpc_security_group_ids = var.create_vpn ? [local.bastion_security_group_id, local.bastion_vpn_security_group_id] : [local.bastion_security_group_id]
   bastion_address = var.route_public_domain_name ? "bastion.${var.public_domain_name}" : local.public_ip
 }
 
@@ -212,9 +223,10 @@ resource "null_resource" "provision_bastion" {
   provisioner "local-exec" {
     interpreter = ["/bin/bash", "-c"]
     command = <<EOT
-      . /deployuser/scripts/exit_test.sh
+      echo "PWD: $PWD"
+      . scripts/exit_test.sh
       export SHOWCOMMANDS=true; set -x
-      cd /deployuser
+      # cd /deployuser
       echo "inventory $TF_VAR_inventory/hosts"
       cat $TF_VAR_inventory/hosts
       ansible-playbook -i "$TF_VAR_inventory" ansible/ssh-add-public-host.yaml -v --extra-vars "public_ip=${local.public_ip} public_address=${local.bastion_address} bastion_address=${local.bastion_address} set_bastion=true"; exit_test
