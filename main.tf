@@ -263,6 +263,7 @@ module "bastion" {
   create_vpn = var.create_vpn
 
   name = "bastion_pipeid${lookup(var.common_tags, "pipelineid", "0")}"
+  bastion_ami_id = var.bastion_ami_id
 
   route_public_domain_name = var.route_public_domain_name
 
