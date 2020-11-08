@@ -171,7 +171,10 @@ EOT
       type        = "ssh"
       timeout     = "10m"
     }
-    inline = ["echo 'Instance is up.'"]
+    inline = [
+      "echo 'Instance is up.'",
+      "set -x && sudo yum install -y python python3", # this line is only required if not included in the ami already
+      ]
   }
 
   provisioner "local-exec" {
