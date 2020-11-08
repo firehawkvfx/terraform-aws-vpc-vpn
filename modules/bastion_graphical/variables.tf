@@ -55,7 +55,7 @@ variable "private_key" {
 }
 
 variable "instance_type" {
-  default = "t3.micro"
+  default = "g3s.xlarge"
 }
 
 variable "user" {
