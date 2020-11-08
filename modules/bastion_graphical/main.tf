@@ -4,23 +4,23 @@
 
 variable "common_tags" {}
 
-resource "aws_security_group" "bastion_graphical_vpn" {
-  count       = var.create_vpc ? 1 : 0
-  name        = "bastion_graphical_vpn"
-  vpc_id      = var.vpc_id
-  description = "bastion_graphical Security Group"
+# resource "aws_security_group" "bastion_graphical_vpn" {
+#   count       = var.create_vpc ? 1 : 0
+#   name        = "bastion_graphical_vpn"
+#   vpc_id      = var.vpc_id
+#   description = "bastion_graphical Security Group"
 
-  tags = merge(map("Name", format("%s", var.name)), var.common_tags, local.extra_tags)
+#   tags = merge(map("Name", format("%s", var.name)), var.common_tags, local.extra_tags)
 
-  # todo need to replace this with correct protocols for pcoip instead of all ports.description
-  ingress {
-    protocol    = "-1"
-    from_port   = 0
-    to_port     = 0
-    cidr_blocks = [var.vpn_cidr, var.remote_subnet_cidr, "172.27.236.0/24"]
-    description = "all incoming traffic from remote access ip"
-  }
-}
+#   # todo need to replace this with correct protocols for pcoip instead of all ports.description
+#   ingress {
+#     protocol    = "-1"
+#     from_port   = 0
+#     to_port     = 0
+#     cidr_blocks = [var.vpn_cidr, var.remote_subnet_cidr, "172.27.236.0/24"]
+#     description = "all incoming traffic from remote access ip"
+#   }
+# }
 
 resource "aws_security_group" "bastion_graphical" {
   count       = var.create_vpc ? 1 : 0
@@ -42,7 +42,7 @@ resource "aws_security_group" "bastion_graphical" {
     protocol    = "tcp"
     from_port   = 8443
     to_port     = 8443
-    cidr_blocks = [var.remote_ip_cidr]
+    cidr_blocks = [var.remote_ip_cidr, var.remote_ip_graphical_cidr]
     description = "NICE DCV graphical server"
   }
 
@@ -50,7 +50,7 @@ resource "aws_security_group" "bastion_graphical" {
     protocol    = "tcp"
     from_port   = 22
     to_port     = 22
-    cidr_blocks = [var.remote_ip_cidr]
+    cidr_blocks = [var.remote_ip_cidr, var.remote_ip_graphical_cidr]
     description = "ssh"
   }
 
@@ -132,8 +132,9 @@ locals {
   private_ip = element(concat(aws_instance.bastion_graphical.*.private_ip, list("")), 0)
   id = element(concat(aws_instance.bastion_graphical.*.id, list("")), 0)
   bastion_graphical_security_group_id = element(concat(aws_security_group.bastion_graphical.*.id, list("")), 0)
-  bastion_graphical_vpn_security_group_id = element(concat(aws_security_group.bastion_graphical_vpn.*.id, list("")), 0)
-  vpc_security_group_ids = var.create_vpn ? [local.bastion_graphical_security_group_id, local.bastion_graphical_vpn_security_group_id] : [local.bastion_graphical_security_group_id]
+  # bastion_graphical_vpn_security_group_id = element(concat(aws_security_group.bastion_graphical_vpn.*.id, list("")), 0)
+  # vpc_security_group_ids = var.create_vpn ? [local.bastion_graphical_security_group_id, local.bastion_graphical_vpn_security_group_id] : [local.bastion_graphical_security_group_id]
+  vpc_security_group_ids = local.bastion_graphical_security_group_id
   bastion_graphical_address = var.route_public_domain_name ? "bastion_graphical.${var.public_domain_name}" : local.public_ip
 }
 

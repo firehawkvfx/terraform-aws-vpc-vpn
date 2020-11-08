@@ -67,7 +67,13 @@ variable "vpn_cidr" {
 }
 
 variable "remote_ip_cidr" {
-  description = "The remote public address that will connect to the openvpn instance and other public instances.  This is used to limit inbound access to public facing hosts like the VPN from your site's public IP."
+  description = "The remote public address that will connect to the bastion instance and other public instances.  This is used to limit inbound access to public facing hosts like the VPN from your site's public IP."
+  type        = string
+  default     = null
+}
+
+variable "remote_ip_graphical_cidr" {
+  description = "The remote public address that will connect to the graphical bastion instance and other public instances.  This is used to limit inbound access to public facing hosts like the VPN from your site's public IP."
   type        = string
   default     = null
 }
@@ -172,8 +178,20 @@ variable "create_bastion" {
   default     = false
 }
 
+variable "create_bastion_graphical" {
+  description = "Optionally create a graphical bastion resource for the VPC"
+  type        = bool
+  default     = false
+}
+
 variable "bastion_ami_id" {
   description = "The prebuilt AMI for the bastion host. This should be a private ami you have build with packer."
+  type = string
+  default = null
+}
+
+variable "bastion_graphical_ami_id" {
+  description = "The prebuilt AMI for the graphical bastion host. This should be a private ami you have build with packer."
   type = string
   default = null
 }

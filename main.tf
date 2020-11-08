@@ -310,6 +310,7 @@ module "bastion_graphical" {
   vpc_cidr                    = var.vpc_cidr
   vpn_cidr                    = var.vpn_cidr
   remote_ip_cidr              = var.remote_ip_cidr
+  remote_ip_graphical_cidr = var.remote_ip_graphical_cidr
   public_subnet_ids           = local.public_subnets
   public_subnets_cidr_blocks  = local.public_subnets_cidr_blocks
   # private_subnets_cidr_blocks = local.private_subnets_cidr_blocks
