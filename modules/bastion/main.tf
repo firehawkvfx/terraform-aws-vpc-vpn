@@ -135,6 +135,16 @@ resource "null_resource" "provision_bastion" {
     bastion_address = local.bastion_address
   }
 
+  provisioner "local-exec" {
+    interpreter = ["/bin/bash", "-c"]
+    command = <<EOT
+      echo "PWD: $PWD"
+      . scripts/exit_test.sh
+      export SHOWCOMMANDS=true; set -x
+      ansible-playbook -i "$TF_VAR_inventory" ansible/ssh-clean-public-host.yaml -v --extra-vars "variable_hosts=ansible_control variable_user=ec2-user public_ip=${local.public_ip} public_address=${local.bastion_address}"; exit_test
+EOT
+  }
+
   provisioner "remote-exec" {
     connection {
       user        = "centos"
