@@ -153,15 +153,24 @@ resource "null_resource" "provision_bastion_graphical" {
     bastion_graphical_address = local.bastion_graphical_address
   }
 
+  provisioner "local-exec" {
+    interpreter = ["/bin/bash", "-c"]
+    command = <<EOT
+      echo "PWD: $PWD"
+      . scripts/exit_test.sh
+      export SHOWCOMMANDS=true; set -x
+      ansible-playbook -i "$TF_VAR_inventory" ansible/ssh-clean-public-host.yaml -v --extra-vars "variable_hosts=ansible_control variable_user=ec2-user public_ip=${local.public_ip} public_address=${local.bastion_graphical_address} bastion_address=${var.bastion_ip} set_bastion=false"; exit_test
+EOT
+  }
+
   provisioner "remote-exec" {
     connection {
-      user        = "centos"
+      user        = "ec2-user"
       host        = local.public_ip
       private_key = var.private_key
       type        = "ssh"
       timeout     = "10m"
     }
-
     inline = ["echo 'Instance is up.'"]
   }
 
