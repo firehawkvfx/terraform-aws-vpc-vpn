@@ -58,10 +58,10 @@ locals {
   aws_internet_gateway = element( concat( aws_internet_gateway.gw.*.id, list("")), 0 )
   vpc_main_route_table_id = element( concat( aws_vpc.main.*.main_route_table_id, list("")), 0 )
   vpc_cidr_block = element( concat( aws_vpc.main.*.cidr_block, list("")), 0 )
-  private_subnets = aws_subnet.private_subnet.*.id
+  private_subnets = var.create_vpc ? aws_subnet.private_subnet.*.id : []
   private_subnet1_id = element( concat( aws_subnet.private_subnet.*.id, list("")), 0 )
   private_subnet2_id = element( concat( aws_subnet.private_subnet.*.id, list("")), 1 )
-  public_subnets = aws_subnet.public_subnet.*.id
+  public_subnets = var.create_vpc ? aws_subnet.public_subnet.*.id : []
   public_subnets_cidr_blocks = var.public_subnets
   # private_subnets_cidr_blocks = var.private_subnets_cidr_blocks
   private_route_table_ids = aws_route_table.private.*.id
