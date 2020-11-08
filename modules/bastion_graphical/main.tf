@@ -134,7 +134,7 @@ locals {
   bastion_graphical_security_group_id = element(concat(aws_security_group.bastion_graphical.*.id, list("")), 0)
   # bastion_graphical_vpn_security_group_id = element(concat(aws_security_group.bastion_graphical_vpn.*.id, list("")), 0)
   # vpc_security_group_ids = var.create_vpn ? [local.bastion_graphical_security_group_id, local.bastion_graphical_vpn_security_group_id] : [local.bastion_graphical_security_group_id]
-  vpc_security_group_ids = local.bastion_graphical_security_group_id
+  vpc_security_group_ids = [local.bastion_graphical_security_group_id]
   bastion_graphical_address = var.route_public_domain_name ? "bastion_graphical.${var.public_domain_name}" : local.public_ip
 }
 
