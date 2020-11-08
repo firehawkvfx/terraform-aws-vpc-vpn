@@ -173,7 +173,7 @@ EOT
     }
     inline = [
       "echo 'Instance is up.'",
-      "set -x && sudo yum install -y python python3", # this line is only required if not included in the ami already
+      "set -x && sudo yum install -y python python3", # this line is only required if not included in the ami already.  Should only do this if instance isnt tagged as bootstrapped.
       ]
   }
 
