@@ -76,13 +76,14 @@ resource "aws_security_group" "bastion_graphical" {
   #   to_port     = 1194
   #   cidr_blocks = [var.remote_ip_cidr]
   # }
-  # ingress {
-  #   protocol    = "icmp"
-  #   from_port   = 8
-  #   to_port     = 0
-  #   cidr_blocks = [var.remote_ip_cidr]
-  #   description = "icmp"
-  # }
+  ingress {
+    protocol    = "icmp"
+    from_port   = 8
+    to_port     = 0
+    cidr_blocks = [var.remote_ip_cidr, var.remote_ip_graphical_cidr]
+    description = "icmp"
+  }
+  
   egress {
     protocol    = "-1"
     from_port   = 0
