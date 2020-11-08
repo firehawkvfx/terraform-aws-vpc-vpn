@@ -83,14 +83,13 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_subnet" "public_subnet" {
+  depends_on = [aws_vpc.main, aws_internet_gateway.gw]
   count = var.create_vpc ? length( var.public_subnets ) : 0
   vpc_id                  = local.vpc_id
 
   availability_zone = element( data.aws_availability_zones.available.names, count.index )
   cidr_block              = element( var.public_subnets, count.index )
   map_public_ip_on_launch = true
-
-  depends_on = [aws_internet_gateway.gw]
 
   tags = merge(var.common_tags, local.extra_tags, map("area", "public"), map("Name", format("public%s_%s", count.index, local.name)))
 }
@@ -102,6 +101,7 @@ locals {
 }
 
 resource "aws_subnet" "private_subnet" {
+  depends_on = [aws_vpc.main]
   count = var.create_vpc ? length( var.private_subnets ) : 0
   vpc_id     = local.vpc_id
 
