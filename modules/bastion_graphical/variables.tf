@@ -28,6 +28,9 @@ variable "vpn_cidr" {
 variable "remote_ip_cidr" {
 }
 
+variable "remote_ip_graphical_cidr" {
+}
+
 variable "public_subnets_cidr_blocks" {
 }
 
