@@ -8,6 +8,8 @@ variable "bastion_graphical_ami_id" {
   default = null
 }
 
+variable "bastion_ip" {} # the address to use for the bastion to ssh into this host.  although it is also technically a bastion, it should be provisioned with ssh via a the single accesss point for the network
+
 variable "create_vpc" {}
 
 variable "create_vpn" {

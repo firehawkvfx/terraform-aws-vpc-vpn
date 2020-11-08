@@ -303,6 +303,8 @@ module "bastion_graphical" {
   name = "bastion_graphical_pipeid${lookup(var.common_tags, "pipelineid", "0")}"
   bastion_graphical_ami_id = var.bastion_graphical_ami_id
 
+  bastion_ip = module.bastion.public_ip # the graphical host is provisioned by the bastion entry point
+
   route_public_domain_name = var.route_public_domain_name
 
   #options for gateway type are centos7 and pcoip
