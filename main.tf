@@ -2,7 +2,7 @@ provider "aws" {
   #  if you haven't installed and configured the aws cli, you will need to provide your aws access key and secret key.
   # region = var.region
   # version = "~> 3.0"
-  version = "~> 3.3.0"
+  version = "~> 3.15.0"
 }
 
 resource "null_resource" "firehawk_init_dependency" {
