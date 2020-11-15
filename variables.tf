@@ -19,9 +19,9 @@ variable "route_public_domain_name" {
 }
 
 variable "private_domain" {
-  description = "The private domain name to be used for hosts within the VPC.  It is recommended this is set to a domain you own to prevent attacks should DNS leak. eg: vault.example.com"
+  description = "The private domain name to be used for hosts within the VPC.  It is recommended this is set to a domain you own to prevent attacks should DNS leak. eg: example.com"
   type        = string
-  default     = "openfirehawk.com"
+  default     = "service.consul"
 }
 
 variable "sleep" {
