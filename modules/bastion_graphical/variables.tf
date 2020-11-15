@@ -57,7 +57,8 @@ variable "private_key" {
 }
 
 variable "instance_type" {
-  default = "g3s.xlarge"
+  # default = "g3s.xlarge"
+  default = "m4.large"
 }
 
 variable "user" {
