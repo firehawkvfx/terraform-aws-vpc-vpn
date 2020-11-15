@@ -120,12 +120,59 @@ resource "aws_instance" "bastion_graphical" {
   }
   tags = merge(map("Name", format("%s", var.name)), var.common_tags, local.extra_tags)
 
-  # `admin_user` and `admin_pw` need to be passed in to the appliance through `user_data`, see docs -->
-  # https://docs.openvpn.net/how-to-tutorialsguides/virtual-platforms/amazon-ec2-appliance-ami-quick-start-guide/
-  user_data = <<USERDATA
+  user_data            = data.template_file.user_data_consul_client.rendered
+  iam_instance_profile = aws_iam_instance_profile.example_instance_profile.name
 
-USERDATA
+}
 
+# ---------------------------------------------------------------------------------------------------------------------
+# CREATES A ROLE THAT IS ATTACHED TO THE INSTANCE
+# The arn of this AWS role is what the Vault server will use create the Vault Role
+# so it can validate login requests from resources with this role
+# ---------------------------------------------------------------------------------------------------------------------
+resource "aws_iam_instance_profile" "example_instance_profile" {
+  path = "/"
+  role = aws_iam_role.example_instance_role.name
+}
+
+resource "aws_iam_role" "example_instance_role" {
+  name_prefix        = "${var.name}-role"
+  assume_role_policy = data.aws_iam_policy_document.example_instance_role.json
+}
+
+data "aws_iam_policy_document" "example_instance_role" {
+  statement {
+    effect  = "Allow"
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["ec2.amazonaws.com"]
+    }
+  }
+}
+
+# Adds policies necessary for running consul
+module "consul_iam_policies_for_client" {
+  source = "github.com/hashicorp/terraform-aws-consul.git//modules/consul-iam-policies?ref=v0.7.7"
+
+  iam_role_id = aws_iam_role.example_instance_role.id
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# THE USER DATA SCRIPT THAT WILL RUN ON THE INSTANCE
+# This script will run consul, which is used for discovering vault cluster
+# And perform the login operation
+# ---------------------------------------------------------------------------------------------------------------------
+
+data "template_file" "user_data_consul_client" {
+  template = file("${path.module}/user-data-consul-client.sh")
+
+  vars = {
+    consul_cluster_tag_key   = var.consul_cluster_tag_key
+    consul_cluster_tag_value = var.consul_cluster_name
+    # example_role_name        = var.example_role_name
+  }
 }
 
 locals {
