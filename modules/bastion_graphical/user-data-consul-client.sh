@@ -49,32 +49,3 @@ function retry {
 
 # These variables are passed in via Terraform template interpolation
 /opt/consul/bin/run-consul --client --cluster-tag-key "${consul_cluster_tag_key}" --cluster-tag-value "${consul_cluster_tag_value}"
-
-
-# # Start the Vault agent
-# /opt/vault/bin/run-vault --agent --agent-auth-type iam --agent-auth-role "${example_role_name}"
-
-# # Retry and wait for the Vault Agent to write the token out to a file.  This could be
-# # because the Vault server is still booting and unsealing, or because run-consul
-# # running on the background didn't finish yet
-# retry \
-#   "[[ -s /opt/vault/data/vault-token ]] && echo 'vault token file created'" \
-#   "waiting for Vault agent to write out token to sink"
-
-# # We can then use the client token from the login output once login was successful
-# token=$(cat /opt/vault/data/vault-token)
-
-# # And use the token to perform operations on vault such as reading a secret
-# # These is being retried because race conditions were causing this to come up null sometimes
-# response=$(retry \
-#   "curl --fail -H 'X-Vault-Token: $token' -X GET https://vault.service.consul:8200/v1/secret/example_gruntwork" \
-#   "Trying to read secret from vault")
-
-# # Vault cli alternative:
-# # export VAULT_TOKEN=$token
-# # export VAULT_ADDR=https://vault.service.consul:8200
-# # /opt/vault/bin/vault read secret/example_gruntwork
-# # Serves the answer in a web server so we can test that this auth client is
-# # authenticating to vault and fetching data correctly
-# echo $response | jq -r .data.the_answer > index.html
-# python -m SimpleHTTPServer 8080 &

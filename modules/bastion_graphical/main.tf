@@ -171,7 +171,6 @@ data "template_file" "user_data_consul_client" {
   vars = {
     consul_cluster_tag_key   = var.consul_cluster_tag_key
     consul_cluster_tag_value = var.consul_cluster_name
-    # example_role_name        = var.example_role_name
   }
 }
 
