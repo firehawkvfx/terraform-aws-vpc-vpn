@@ -37,7 +37,6 @@ resource "aws_security_group" "bastion_graphical" {
     cidr_blocks = [var.vpc_cidr]
     description = "all incoming traffic from vpc"
   }
-
   ingress {
     protocol    = "tcp"
     from_port   = 8443
@@ -53,29 +52,6 @@ resource "aws_security_group" "bastion_graphical" {
     cidr_blocks = [var.remote_ip_cidr, var.remote_ip_graphical_cidr]
     description = "ssh"
   }
-
-  # For OpenVPN Client Web Server & Admin Web UI
-
-  # ingress {
-  #   protocol    = "tcp"
-  #   from_port   = 22
-  #   to_port     = 22
-  #   cidr_blocks = [var.remote_ip_cidr]
-  #   description = "ssh"
-  # }
-  # ingress {
-  #   protocol    = "tcp"
-  #   from_port   = 443
-  #   to_port     = 443
-  #   cidr_blocks = [var.remote_ip_cidr]
-  #   description = "https"
-  # }
-  # ingress {
-  #   protocol    = "udp"
-  #   from_port   = 1194
-  #   to_port     = 1194
-  #   cidr_blocks = [var.remote_ip_cidr]
-  # }
   ingress {
     protocol    = "icmp"
     from_port   = 8
@@ -83,7 +59,6 @@ resource "aws_security_group" "bastion_graphical" {
     cidr_blocks = [var.remote_ip_cidr, var.remote_ip_graphical_cidr]
     description = "icmp"
   }
-
   egress {
     protocol    = "-1"
     from_port   = 0
