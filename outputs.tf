@@ -67,3 +67,11 @@ output "bastion_public_ip" {
 output "bastion_private_ip" {
   value = module.bastion.private_ip
 }
+
+output "bastion_graphical_public_ip" {
+  value = module.bastion_graphical.public_ip
+}
+
+output "bastion_graphical_private_ip" {
+  value = module.bastion_graphical.private_ip
+}
