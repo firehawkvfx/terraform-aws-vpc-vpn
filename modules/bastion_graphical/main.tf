@@ -177,6 +177,7 @@ resource "null_resource" "provision_bastion_graphical" {
   provisioner "local-exec" {
     interpreter = ["/bin/bash", "-c"]
     command = <<EOT
+      cd $TF_VAR_firehawk_path
       echo "PWD: $PWD"
       . scripts/exit_test.sh
       export SHOWCOMMANDS=true; set -x
@@ -201,6 +202,7 @@ EOT
   provisioner "local-exec" {
     interpreter = ["/bin/bash", "-c"]
     command = <<EOT
+      cd $TF_VAR_firehawk_path
       echo "PWD: $PWD"
       . scripts/exit_test.sh
       export SHOWCOMMANDS=true; set -x
