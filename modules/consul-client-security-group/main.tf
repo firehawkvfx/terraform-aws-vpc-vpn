@@ -22,6 +22,12 @@ variable "vpc_cidr" {
     type = string
 }
 
+variable "common_tags" {
+  description = "A map of common tags to assign to the resources created by this module"
+  type        = map(string)
+  default     = {}
+}
+
 output "consul_client_sg_id" {
     value = aws_security_group.consul_client.id
 }
