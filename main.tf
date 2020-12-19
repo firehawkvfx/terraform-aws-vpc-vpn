@@ -255,6 +255,14 @@ resource "aws_route53_resolver_rule_association" "sys" {
   vpc_id           = local.vpc_id
 }
 
+module "consul_client_security_group" {
+  source = "./modules/consul_client_security_group"
+
+  create_vpc = var.create_vpc
+  vpc_id                      = local.vpc_id
+  vpc_cidr                    = var.vpc_cidr
+}
+
 module "bastion" {
   source = "./modules/bastion"
 
