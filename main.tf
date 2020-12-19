@@ -256,7 +256,7 @@ resource "aws_route53_resolver_rule_association" "sys" {
 }
 
 module "consul_client_security_group" {
-  source = "./modules/consul_client_security_group"
+  source = "./modules/consul-client-security-group"
 
   create_vpc = var.create_vpc
   vpc_id                      = local.vpc_id
