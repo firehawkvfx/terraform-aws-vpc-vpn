@@ -10,6 +10,10 @@ variable "create_vpc" {
     type = bool
 }
 
+variable "remote_ip_cidr" {
+    type = string
+}
+
 variable "vpc_id" {
     type = string
 }
