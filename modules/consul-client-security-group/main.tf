@@ -40,13 +40,13 @@ resource "aws_security_group" "consul_client" {
 
   tags = merge(map("Name", format("%s", local.name)), var.common_tags, local.extra_tags)
 
-#   ingress {
-#     protocol    = "-1"
-#     from_port   = 0
-#     to_port     = 0
-#     cidr_blocks = [var.vpc_cidr]
-#     description = "all incoming traffic from vpc"
-#   }
+  ingress {
+    protocol    = "-1"
+    from_port   = 0
+    to_port     = 0
+    cidr_blocks = [var.vpc_cidr]
+    description = "all incoming traffic from vpc"
+  }
 
   ingress {
     protocol    = "tcp"
