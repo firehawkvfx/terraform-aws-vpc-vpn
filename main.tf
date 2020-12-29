@@ -70,7 +70,7 @@ locals {
 }
 
 resource "aws_route53_zone" "private" { # the private hosted zone is used for host names privately ending with the domain name.
-  count = var.create_vpc ? 1 : 0
+  count = var.create_vpc && var.create_vpn ? 1 : 0 # currently testing using this for vpn only
 
   name = var.private_domain
   vpc {
@@ -242,14 +242,14 @@ resource "aws_route53_resolver_endpoint" "main" {
 }
 
 resource "aws_route53_resolver_rule" "sys" {
-  count = var.create_vpc ? 1 : 0
+  count = var.create_vpc && var.create_vpn ? 1 : 0 # currently testing using this for vpn only
 
   domain_name = var.private_domain
   rule_type   = "SYSTEM"
 }
 
 resource "aws_route53_resolver_rule_association" "sys" {
-  count = var.create_vpc ? 1 : 0
+  count = var.create_vpc && var.create_vpn ? 1 : 0 # currently testing using this for vpn only
 
   resolver_rule_id = element(concat(aws_route53_resolver_rule.sys.*.id, list("")), 0)
   vpc_id           = local.vpc_id
