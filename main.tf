@@ -133,7 +133,7 @@ resource "aws_route_table" "private" {
 }
 
 resource "aws_route" "private_nat_gateway" {
-  count = var.create_vpc ? 1 : 0
+  count = var.create_vpc && var.enable_nat_gateway && var.sleep == false ? 1 : 0
   route_table_id         = element(concat(aws_route_table.private.*.id, list("")), 0)
   destination_cidr_block = "0.0.0.0/0"
   nat_gateway_id         = element(concat(aws_nat_gateway.gw.*.id, list("")), 0)
