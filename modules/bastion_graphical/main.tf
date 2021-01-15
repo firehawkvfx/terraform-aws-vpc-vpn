@@ -162,7 +162,7 @@ locals {
 
 
 resource "null_resource" "provision_bastion_graphical" {
-  count    = var.create_vpc ? 1 : 0
+  count    = ( !var.sleep && var.create_vpc) ? 1 : 0
   depends_on = [
     aws_instance.bastion_graphical,
     aws_eip.bastion_graphicalip,
