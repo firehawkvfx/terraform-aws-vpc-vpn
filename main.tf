@@ -35,7 +35,7 @@ resource "aws_vpc_dhcp_options" "main" {
   count       = var.create_vpc ? 1 : 0
   domain_name          = var.private_domain # This may not be available to be customised for us-east-1
   # domain_name_servers  = ["AmazonProvidedDNS"]
-  domain_name_servers  = ["127.0.0.1", "AmazonProvidedDNS"]
+  domain_name_servers  = ["127.0.0.1", "127.0.0.53", "AmazonProvidedDNS"] # Annoyingly "127.0.0.53" must be provided for ubuntu
   ntp_servers          = ["127.0.0.1"]
   netbios_name_servers = ["127.0.0.1"]
   netbios_node_type    = 2
