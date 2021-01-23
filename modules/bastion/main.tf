@@ -204,6 +204,7 @@ resource "null_resource" "start-bastion" {
 }
 
 resource "null_resource" "shutdown-bastion" {
+  depends_on = [aws_instance.bastion]
   count = var.sleep && var.create_vpc ? 1 : 0
 
   provisioner "local-exec" {
