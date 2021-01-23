@@ -235,6 +235,7 @@ resource "aws_route53_record" "bastion_graphical_record" {
 }
 
 resource "null_resource" "start_bastion" {
+  depends_on = [aws_instance.bastion_graphical]
   count = ( !var.sleep && var.create_vpc) ? 1 : 0
 
   provisioner "local-exec" {
