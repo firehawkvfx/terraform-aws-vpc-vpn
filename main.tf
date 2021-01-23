@@ -152,7 +152,7 @@ resource "aws_route" "private_nat_gateway" {
 resource "aws_route_table" "public" {
   count       = var.create_vpc ? 1 : 0
   vpc_id = local.vpc_id
-  tags = merge(var.common_tags, local.extra_tags, map("Name", "${local.name}_public"))
+  tags = merge(var.common_tags, local.extra_tags, map("area", "public"), map("Name", "${local.name}_public"))
 }
 
 resource "aws_route" "public_gateway" {
