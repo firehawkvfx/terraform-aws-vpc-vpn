@@ -199,7 +199,7 @@ resource "null_resource" "start-bastion" {
 
   provisioner "local-exec" {
     interpreter = ["/bin/bash", "-c"]
-    command = "aws ec2 start-instances --instance-ids ${local.id}"
+    command = "sleep 10; aws ec2 start-instances --instance-ids ${local.id}"
   }
 }
 
