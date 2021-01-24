@@ -96,10 +96,6 @@ variable "aws_private_key_path" {
   default     = "~/.ssh/aws_key.pem"
 }
 
-locals { # if no key exists then private_key is blank
-  private_key = fileexists(var.aws_private_key_path) ? file(var.aws_private_key_path) : ""
-}
-
 variable "route_zone_id" {
   description = "(Optional) The Route53 Zone ID if using a public DNS"
   type        = string

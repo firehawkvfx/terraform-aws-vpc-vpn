@@ -58,8 +58,8 @@ resource "aws_internet_gateway" "gw" {
 
   tags = merge(var.common_tags, local.extra_tags, map("Name", format("igw_%s", local.name)))
 }
-
 locals {
+  private_key = fileexists(var.aws_private_key_path) ? file(var.aws_private_key_path) : ""
   vpc_id = element( concat( aws_vpc.main.*.id, list("")), 0 )
   aws_vpc_dhcp_options_id = element( concat( aws_vpc_dhcp_options.main.*.id, list("")), 0 )
   aws_internet_gateway = element( concat( aws_internet_gateway.gw.*.id, list("")), 0 )
