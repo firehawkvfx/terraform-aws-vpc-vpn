@@ -102,13 +102,6 @@ resource "aws_instance" "bastion" {
     delete_on_termination = true
   }
   tags = merge(map("Name", format("%s", var.name)), var.common_tags, local.extra_tags)
-
-  # `admin_user` and `admin_pw` need to be passed in to the appliance through `user_data`, see docs -->
-  # https://docs.openvpn.net/how-to-tutorialsguides/virtual-platforms/amazon-ec2-appliance-ami-quick-start-guide/
-  user_data = <<USERDATA
-
-USERDATA
-
 }
 
 locals {
@@ -199,7 +192,7 @@ resource "null_resource" "start-bastion" {
 
   provisioner "local-exec" {
     interpreter = ["/bin/bash", "-c"]
-    command = "aws ec2 describe-instance-status --instance-id ${local.id}; aws ec2 start-instances --instance-ids ${local.id}"
+    command = "sleep 60; aws ec2 describe-instance-status --instance-id ${local.id}; aws ec2 start-instances --instance-ids ${local.id}"
   }
 }
 
