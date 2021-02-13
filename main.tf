@@ -269,7 +269,7 @@ module "consul_client_security_group" {
   create_vpc = var.create_vpc
   vpc_id                      = local.vpc_id
   vpc_cidr                    = var.vpc_cidr
-  remote_ip_cidr = var.remote_ip_cidr
+  remote_ip_cidr_list = [var.remote_ip_cidr, var.remote_cloud_private_ip_cidr, var.remote_cloud_public_ip_cidr]
 }
 
 module "bastion" {

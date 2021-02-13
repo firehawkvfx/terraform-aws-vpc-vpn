@@ -10,8 +10,8 @@ variable "create_vpc" {
     type = bool
 }
 
-variable "remote_ip_cidr" {
-    type = string
+variable "remote_ip_cidr_list" {
+    type = list(string)
 }
 
 variable "vpc_id" {
@@ -52,7 +52,7 @@ resource "aws_security_group" "consul_client" {
     protocol    = "tcp"
     from_port   = 22
     to_port     = 22
-    cidr_blocks = [var.remote_ip_cidr]
+    cidr_blocks = var.remote_ip_cidr_list
     description = "ssh"
   }
 
