@@ -1,5 +1,6 @@
 variable "name" {
   default = "bastion_graphical"
+  type = string
 }
 
 variable "bastion_graphical_ami_id" {

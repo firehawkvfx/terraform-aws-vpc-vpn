@@ -10,7 +10,7 @@ resource "aws_security_group" "bastion_vpn" {
   vpc_id      = var.vpc_id
   description = "Bastion Security Group"
 
-  tags = merge(map("Name", format("%s", var.name)), var.common_tags, local.extra_tags)
+  tags = merge(map("Name", var.name), var.common_tags, local.extra_tags)
 
   # todo need to replace this with correct protocols for pcoip instead of all ports.description
   ingress {
@@ -28,7 +28,7 @@ resource "aws_security_group" "bastion" {
   vpc_id      = var.vpc_id
   description = "Bastion Security Group"
 
-  tags = merge(map("Name", format("%s", var.name)), var.common_tags, local.extra_tags)
+  tags = merge(map("Name", var.name), var.common_tags, local.extra_tags)
 
   ingress {
     protocol    = "-1"
@@ -86,7 +86,7 @@ resource "aws_eip" "bastionip" {
   count    = var.create_vpc ? 1 : 0
   vpc      = true
   instance = aws_instance.bastion[count.index].id
-  tags = merge(map("Name", format("%s", var.name)), var.common_tags, local.extra_tags)
+  tags = merge(map("Name", var.name), var.common_tags, local.extra_tags)
 }
 
 resource "aws_instance" "bastion" {
@@ -101,7 +101,7 @@ resource "aws_instance" "bastion" {
   root_block_device {
     delete_on_termination = true
   }
-  tags = merge(map("Name", format("%s", var.name)), var.common_tags, local.extra_tags)
+  tags = merge(map("Name", var.name), var.common_tags, local.extra_tags)
 }
 
 locals {
