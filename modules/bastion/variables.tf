@@ -1,6 +1,6 @@
 variable "name" {
   default = "bastion"
-  type    = "string"
+  type    = string
 }
 
 variable "bastion_ami_id" {
