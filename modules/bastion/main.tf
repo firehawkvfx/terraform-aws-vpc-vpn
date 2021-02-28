@@ -10,7 +10,7 @@ resource "aws_security_group" "bastion_vpn" {
   vpc_id      = var.vpc_id
   description = "Bastion Security Group"
 
-  tags = merge(map("Name", format("%s", var.name)), var.common_tags, local.extra_tags)
+  tags = merge(map("Name", var.name), var.common_tags, local.extra_tags)
 
   # todo need to replace this with correct protocols for pcoip instead of all ports.description
   ingress {
@@ -28,7 +28,7 @@ resource "aws_security_group" "bastion" {
   vpc_id      = var.vpc_id
   description = "Bastion Security Group"
 
-  tags = merge(map("Name", format("%s", var.name)), var.common_tags, local.extra_tags)
+  tags = merge(map("Name", var.name), var.common_tags, local.extra_tags)
 
   ingress {
     protocol    = "-1"
@@ -86,85 +86,12 @@ resource "aws_eip" "bastionip" {
   count    = var.create_vpc ? 1 : 0
   vpc      = true
   instance = aws_instance.bastion[count.index].id
-  tags = merge(map("Name", format("%s", var.name)), var.common_tags, local.extra_tags)
-}
-
-
-data "aws_ami_ids" "centos_v7" {
-  owners = ["679593333241"] # the softnas account id
-  filter {
-    name   = "description"
-    values = ["CentOS Linux 7 x86_64 HVM EBS ENA 2002_01"]
-  }
-}
-
-variable "allow_prebuilt_bastion_centos_ami" {
-  default = false
-}
-
-variable "bastion_centos_ami_option" { # Where multiple data aws_ami_ids queries are available, this allows us to select one.
-  default = "centos_v7"
-}
-
-locals {
-  keys = ["centos_v7"] # Where multiple data aws_ami_ids queries are available, this is the full list of options.
-  empty_list = list("")
-  values = [ element( concat(data.aws_ami_ids.centos_v7.ids, local.empty_list ), 0 ) ] # the list of ami id's
-  bastion_centos_consumption_map = zipmap( local.keys , local.values )
-}
-
-locals { # select the found ami to use based on the map lookup
-  base_ami = lookup(local.bastion_centos_consumption_map, var.bastion_centos_ami_option)
-}
-
-data "aws_ami_ids" "prebuilt_bastion_centos_ami_list" { # search for a prebuilt tagged ami with the same base image.  if there is a match, it can be used instead, allowing us to skip provisioning.
-  owners = ["self"]
-  filter {
-    name   = "tag:base_ami"
-    values = [ local.base_ami ]
-  }
-  filter {
-    name = "name"
-    values = ["bastion_centos_prebuilt_*"]
-  }
-}
-
-locals {
-  prebuilt_bastion_centos_ami_list = data.aws_ami_ids.prebuilt_bastion_centos_ami_list.ids
-  first_element = element( data.aws_ami_ids.prebuilt_bastion_centos_ami_list.*.ids, 0)
-  mod_list = concat( local.prebuilt_bastion_centos_ami_list , list("") )
-  aquired_ami      = element( local.mod_list , 0) # aquired ami will use the ami in the list if found, otherwise it will default to the original ami.
-  use_prebuilt_bastion_centos_ami = var.allow_prebuilt_bastion_centos_ami && length(local.mod_list) > 1 ? true : false
-  ami = local.use_prebuilt_bastion_centos_ami ? local.aquired_ami : local.base_ami
-}
-
-output "base_ami" {
-  value = local.base_ami
-}
-
-output "prebuilt_bastion_centos_ami_list" {
-  value = local.prebuilt_bastion_centos_ami_list
-}
-
-output "first_element" {
-  value = local.first_element
-}
-
-output "aquired_ami" {
-  value = local.aquired_ami
-}
-
-output "use_prebuilt_bastion_centos_ami" {
-  value = local.use_prebuilt_bastion_centos_ami
-}
-
-output "ami" {
-  value = local.ami
+  tags = merge(map("Name", var.name), var.common_tags, local.extra_tags)
 }
 
 resource "aws_instance" "bastion" {
   count         = var.create_vpc ? 1 : 0
-  ami           = local.ami
+  ami           = var.bastion_ami_id
   instance_type = var.instance_type
   key_name      = var.aws_key_name
   subnet_id     = element(concat(var.public_subnet_ids, list("")), 0)
@@ -174,14 +101,7 @@ resource "aws_instance" "bastion" {
   root_block_device {
     delete_on_termination = true
   }
-  tags = merge(map("Name", format("%s", var.name)), var.common_tags, local.extra_tags)
-
-  # `admin_user` and `admin_pw` need to be passed in to the appliance through `user_data`, see docs -->
-  # https://docs.openvpn.net/how-to-tutorialsguides/virtual-platforms/amazon-ec2-appliance-ami-quick-start-guide/
-  user_data = <<USERDATA
-
-USERDATA
-
+  tags = merge(map("Name", var.name), var.common_tags, local.extra_tags)
 }
 
 locals {
@@ -208,6 +128,17 @@ resource "null_resource" "provision_bastion" {
     bastion_address = local.bastion_address
   }
 
+  provisioner "local-exec" {
+    interpreter = ["/bin/bash", "-c"]
+    command = <<EOT
+      cd $TF_VAR_firehawk_path
+      echo "PWD: $PWD"
+      . scripts/exit_test.sh
+      export SHOWCOMMANDS=true; set -x
+      ansible-playbook -i "$TF_VAR_inventory" ansible/ssh-clean-public-host.yaml -v --extra-vars "variable_hosts=ansible_control variable_user=ec2-user public_ip=${local.public_ip} public_address=${local.bastion_address}"; exit_test
+EOT
+  }
+
   provisioner "remote-exec" {
     connection {
       user        = "centos"
@@ -217,23 +148,22 @@ resource "null_resource" "provision_bastion" {
       timeout     = "10m"
     }
 
-    inline = ["set -x && sudo yum install -y python python3"]
+    inline = ["echo 'Instance is up.'"]
   }
 
   provisioner "local-exec" {
     interpreter = ["/bin/bash", "-c"]
     command = <<EOT
+      cd $TF_VAR_firehawk_path
       echo "PWD: $PWD"
       . scripts/exit_test.sh
       export SHOWCOMMANDS=true; set -x
-      # cd /deployuser
       echo "inventory $TF_VAR_inventory/hosts"
       cat $TF_VAR_inventory/hosts
-      ansible-playbook -i "$TF_VAR_inventory" ansible/ssh-add-public-host.yaml -v --extra-vars "variable_user=ec2-user variable_hosts=ansible_control public_ip=${local.public_ip} public_address=${local.bastion_address} bastion_address=${local.bastion_address} set_bastion=true"; exit_test
+      ansible-playbook -i "$TF_VAR_inventory" ansible/ssh-add-public-host.yaml -v --extra-vars "variable_hosts=ansible_control variable_user=ec2-user public_ip=${local.public_ip} public_address=${local.bastion_address} bastion_address=${local.bastion_address} set_bastion=true"; exit_test
       ansible-playbook -i "$TF_VAR_inventory" ansible/inventory-add.yaml -v --extra-vars "variable_user=ec2-user variable_group=ec2-user host_name=bastion host_ip=${local.public_ip} insert_ssh_key_string=ansible_ssh_private_key_file=$TF_VAR_aws_private_key_path"; exit_test
-      ansible-playbook -i "$TF_VAR_inventory" ansible/get-file.yaml -v --extra-vars "source=/var/log/messages dest=$TF_VAR_firehawk_path/tmp/log/cloud-init-output-bastion.log variable_user=centos variable_host=bastion"; exit_test
+      ansible-playbook -i "$TF_VAR_inventory" ansible/get-file.yaml -v --extra-vars "variable_user=ec2-user source=/var/log/messages dest=$TF_VAR_firehawk_path/tmp/log/cloud-init-output-bastion.log variable_user=centos variable_host=bastion"; exit_test
 EOT
-
   }
 }
 
@@ -257,24 +187,24 @@ resource "aws_route53_record" "bastion_record" {
 }
 
 resource "null_resource" "start-bastion" {
+  depends_on = [aws_instance.bastion]
   count = ( !var.sleep && var.create_vpc) ? 1 : 0
 
   provisioner "local-exec" {
     interpreter = ["/bin/bash", "-c"]
-    command = "aws ec2 start-instances --instance-ids ${local.id}"
+    command = "sleep 60; aws ec2 describe-instance-status --instance-id ${local.id}; aws ec2 start-instances --instance-ids ${local.id}"
   }
 }
 
 resource "null_resource" "shutdown-bastion" {
+  depends_on = [aws_instance.bastion]
   count = var.sleep && var.create_vpc ? 1 : 0
 
   provisioner "local-exec" {
     interpreter = ["/bin/bash", "-c"]
     command = <<EOT
       aws ec2 stop-instances --instance-ids ${local.id}
-  
 EOT
-
   }
 }
 

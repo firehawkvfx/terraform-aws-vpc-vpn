@@ -2,7 +2,7 @@ provider "aws" {
   #  if you haven't installed and configured the aws cli, you will need to provide your aws access key and secret key.
   # region = var.region
   # version = "~> 3.0"
-  version = "~> 3.3.0"
+  version = "~> 3.15.0"
 }
 
 resource "null_resource" "firehawk_init_dependency" {
@@ -33,10 +33,17 @@ resource "aws_vpc" "main" {
 
 resource "aws_vpc_dhcp_options" "main" {
   count       = var.create_vpc ? 1 : 0
-  domain_name          = var.private_domain # This may not be available to be customised for us-east-1
-  domain_name_servers  = ["AmazonProvidedDNS"]
+  # domain_name          = var.private_domain # This may not be available to be customised for us-east-1
+  # domain_name_servers  = ["AmazonProvidedDNS"]
+  domain_name_servers  = ["127.0.0.1", "AmazonProvidedDNS"]
+  ntp_servers          = ["127.0.0.1"]
+  netbios_name_servers = ["127.0.0.1"]
+  netbios_node_type    = 2
   tags = merge(var.common_tags, local.extra_tags, map("Name", format("dhcpoptions_%s", local.name)))
 }
+
+
+
 
 resource "aws_vpc_dhcp_options_association" "dns_resolver" {
   count       = var.create_vpc ? 1 : 0
@@ -51,17 +58,17 @@ resource "aws_internet_gateway" "gw" {
 
   tags = merge(var.common_tags, local.extra_tags, map("Name", format("igw_%s", local.name)))
 }
-
 locals {
+  private_key = fileexists(var.aws_private_key_path) ? file(var.aws_private_key_path) : ""
   vpc_id = element( concat( aws_vpc.main.*.id, list("")), 0 )
   aws_vpc_dhcp_options_id = element( concat( aws_vpc_dhcp_options.main.*.id, list("")), 0 )
   aws_internet_gateway = element( concat( aws_internet_gateway.gw.*.id, list("")), 0 )
   vpc_main_route_table_id = element( concat( aws_vpc.main.*.main_route_table_id, list("")), 0 )
   vpc_cidr_block = element( concat( aws_vpc.main.*.cidr_block, list("")), 0 )
-  private_subnets = aws_subnet.private_subnet.*.id
+  private_subnets = var.create_vpc ? aws_subnet.private_subnet.*.id : []
   private_subnet1_id = element( concat( aws_subnet.private_subnet.*.id, list("")), 0 )
   private_subnet2_id = element( concat( aws_subnet.private_subnet.*.id, list("")), 1 )
-  public_subnets = aws_subnet.public_subnet.*.id
+  public_subnets = var.create_vpc ? aws_subnet.public_subnet.*.id : []
   public_subnets_cidr_blocks = var.public_subnets
   # private_subnets_cidr_blocks = var.private_subnets_cidr_blocks
   private_route_table_ids = aws_route_table.private.*.id
@@ -70,7 +77,7 @@ locals {
 }
 
 resource "aws_route53_zone" "private" { # the private hosted zone is used for host names privately ending with the domain name.
-  count = var.create_vpc ? 1 : 0
+  count = var.create_vpc && var.create_vpn ? 1 : 0 # currently testing using this for vpn only
 
   name = var.private_domain
   vpc {
@@ -83,14 +90,13 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_subnet" "public_subnet" {
+  depends_on = [aws_vpc.main, aws_internet_gateway.gw]
   count = var.create_vpc ? length( var.public_subnets ) : 0
   vpc_id                  = local.vpc_id
 
   availability_zone = element( data.aws_availability_zones.available.names, count.index )
   cidr_block              = element( var.public_subnets, count.index )
   map_public_ip_on_launch = true
-
-  depends_on = [aws_internet_gateway.gw]
 
   tags = merge(var.common_tags, local.extra_tags, map("area", "public"), map("Name", format("public%s_%s", count.index, local.name)))
 }
@@ -102,6 +108,7 @@ locals {
 }
 
 resource "aws_subnet" "private_subnet" {
+  depends_on = [aws_vpc.main]
   count = var.create_vpc ? length( var.private_subnets ) : 0
   vpc_id     = local.vpc_id
 
@@ -133,7 +140,7 @@ resource "aws_route_table" "private" {
 }
 
 resource "aws_route" "private_nat_gateway" {
-  count = var.create_vpc ? 1 : 0
+  count = var.create_vpc && var.enable_nat_gateway && var.sleep == false ? 1 : 0
   route_table_id         = element(concat(aws_route_table.private.*.id, list("")), 0)
   destination_cidr_block = "0.0.0.0/0"
   nat_gateway_id         = element(concat(aws_nat_gateway.gw.*.id, list("")), 0)
@@ -145,7 +152,7 @@ resource "aws_route" "private_nat_gateway" {
 resource "aws_route_table" "public" {
   count       = var.create_vpc ? 1 : 0
   vpc_id = local.vpc_id
-  tags = merge(var.common_tags, local.extra_tags, map("Name", "${local.name}_public"))
+  tags = merge(var.common_tags, local.extra_tags, map("area", "public"), map("Name", "${local.name}_public"))
 }
 
 resource "aws_route" "public_gateway" {
@@ -159,16 +166,16 @@ resource "aws_route" "public_gateway" {
 }
 
 resource "aws_route_table_association" "private_associations" {
-  depends_on = [ aws_subnet.private_subnet ]
-  count = var.create_vpc ? length( local.private_subnets ) : 0
+  depends_on = [ aws_vpc.main, aws_subnet.private_subnet ]
+  count = var.create_vpc ? length( var.public_subnets ) : 0
 
   subnet_id      = element( aws_subnet.private_subnet.*.id, count.index )
   route_table_id = element( aws_route_table.private.*.id, 0 )
 }
 
 resource "aws_route_table_association" "public_associations" {
-  depends_on = [ aws_subnet.public_subnet ]
-  count = var.create_vpc ? length( local.public_subnets ) : 0
+  depends_on = [ aws_vpc.main, aws_subnet.public_subnet ]
+  count = var.create_vpc ? length( var.public_subnets ) : 0
 
   subnet_id      = element( aws_subnet.public_subnet.*.id, count.index )
   route_table_id = element( aws_route_table.public.*.id, 0 )
@@ -242,17 +249,27 @@ resource "aws_route53_resolver_endpoint" "main" {
 }
 
 resource "aws_route53_resolver_rule" "sys" {
-  count = var.create_vpc ? 1 : 0
+  count = var.create_vpc && var.create_vpn ? 1 : 0 # currently testing using this for vpn only
 
   domain_name = var.private_domain
   rule_type   = "SYSTEM"
 }
 
 resource "aws_route53_resolver_rule_association" "sys" {
-  count = var.create_vpc ? 1 : 0
+  count = var.create_vpc && var.create_vpn ? 1 : 0 # currently testing using this for vpn only
 
   resolver_rule_id = element(concat(aws_route53_resolver_rule.sys.*.id, list("")), 0)
   vpc_id           = local.vpc_id
+}
+
+module "consul_client_security_group" {
+  source = "./modules/consul-client-security-group"
+  common_tags = var.common_tags
+
+  create_vpc = var.create_vpc
+  vpc_id                      = local.vpc_id
+  vpc_cidr                    = var.vpc_cidr
+  remote_ip_cidr_list = [var.remote_ip_cidr, var.remote_cloud_private_ip_cidr, var.remote_cloud_public_ip_cidr]
 }
 
 module "bastion" {
@@ -263,6 +280,7 @@ module "bastion" {
   create_vpn = var.create_vpn
 
   name = "bastion_pipeid${lookup(var.common_tags, "pipelineid", "0")}"
+  bastion_ami_id = var.bastion_ami_id
 
   route_public_domain_name = var.route_public_domain_name
 
@@ -271,6 +289,47 @@ module "bastion" {
   vpc_cidr                    = var.vpc_cidr
   vpn_cidr                    = var.vpn_cidr
   remote_ip_cidr              = var.remote_ip_cidr
+  public_subnet_ids           = local.public_subnets
+  public_subnets_cidr_blocks  = local.public_subnets_cidr_blocks
+  # private_subnets_cidr_blocks = local.private_subnets_cidr_blocks
+  remote_subnet_cidr          = var.remote_subnet_cidr
+
+  aws_key_name       = var.aws_key_name
+  aws_private_key_path = var.aws_private_key_path
+  private_key    = local.private_key
+
+  route_zone_id      = var.route_zone_id
+  public_domain_name = var.public_domain_name
+
+  #skipping os updates will allow faster rollout for testing.
+  skip_update = var.node_skip_update
+
+  #sleep will stop instances to save cost during idle time.
+  sleep = var.sleep
+
+  common_tags = var.common_tags
+}
+
+module "bastion_graphical" {
+  source = "./modules/bastion_graphical"
+
+  create_vpc = var.create_vpc && var.create_bastion_graphical
+  
+  create_vpn = var.create_vpn
+
+  name = "bastion_graphical_pipeid${lookup(var.common_tags, "pipelineid", "0")}"
+  bastion_graphical_ami_id = var.bastion_graphical_ami_id
+
+  bastion_ip = module.bastion.public_ip # the graphical host is provisioned by the bastion entry point
+
+  route_public_domain_name = var.route_public_domain_name
+
+  #options for gateway type are centos7 and pcoip
+  vpc_id                      = local.vpc_id
+  vpc_cidr                    = var.vpc_cidr
+  vpn_cidr                    = var.vpn_cidr
+  remote_ip_cidr              = var.remote_ip_cidr
+  remote_ip_graphical_cidr = var.remote_ip_graphical_cidr
   public_subnet_ids           = local.public_subnets
   public_subnets_cidr_blocks  = local.public_subnets_cidr_blocks
   # private_subnets_cidr_blocks = local.private_subnets_cidr_blocks
@@ -341,7 +400,7 @@ module "vpn" {
   openvpn_admin_user = var.openvpn_admin_user # Note: Don't choose "admin" username. Looks like it's already reserved.
   openvpn_admin_pw   = var.openvpn_admin_pw
 
-  bastion_ip = module.bastion.public_ip
+  bastion_ip = module.bastion.public_ip # the vpn is provisioned by the bastion entry point
   bastion_dependency = module.bastion.bastion_dependency
   firehawk_init_dependency = var.firehawk_init_dependency
 

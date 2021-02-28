@@ -1,13 +1,15 @@
 variable "name" {
-  default = "bastion"
-  type    = string
+  default = "bastion_graphical"
+  type = string
 }
 
-variable "bastion_ami_id" {
+variable "bastion_graphical_ami_id" {
   description = "The prebuilt AMI for the bastion host. This should be a private ami you have build with packer."
-  type        = string
-  default     = null
+  type = string
+  default = null
 }
+
+variable "bastion_ip" {} # the address to use for the bastion to ssh into this host.  although it is also technically a bastion, it should be provisioned with ssh via a the single accesss point for the network
 
 variable "create_vpc" {}
 
@@ -29,13 +31,13 @@ variable "vpn_cidr" {
 variable "remote_ip_cidr" {
 }
 
+variable "remote_ip_graphical_cidr" {
+}
+
 variable "public_subnets_cidr_blocks" {
 }
 
 variable "route_public_domain_name" {}
-
-# variable "private_subnets_cidr_blocks" {
-# }
 
 variable "remote_subnet_cidr" {
 }
@@ -55,18 +57,9 @@ variable "aws_key_name" {
 variable "private_key" {
 }
 
-#this ami id is for southeast-ap-2 sydney only.  todo - changes will need to be made to pull a list of ami's
-
-variable "ami_map" {
-  type = map(string)
-
-  default = {
-    ap-southeast-2 = "ami-d8c21dba"
-  }
-}
-
 variable "instance_type" {
-  default = "t3.micro"
+  # default = "g3s.xlarge"
+  default = "m4.large"
 }
 
 variable "user" {
@@ -81,3 +74,14 @@ variable "skip_update" {
   default = false
 }
 
+variable "consul_cluster_name" {
+  description = "What to name the Consul server cluster and all of its associated resources"
+  type        = string
+  default     = "consul-example"
+}
+
+variable "consul_cluster_tag_key" {
+  description = "The tag the Consul EC2 Instances will look for to automatically discover each other and form a cluster."
+  type        = string
+  default     = "consul-servers"
+}

@@ -19,9 +19,9 @@ variable "route_public_domain_name" {
 }
 
 variable "private_domain" {
-  description = "The private domain name to be used for hosts within the VPC.  It is recommended this is set to a domain you own to prevent attacks should DNS leak. eg: vault.example.com"
+  description = "The private domain name to be used for hosts within the VPC.  It is recommended this is set to a domain you own to prevent attacks should DNS leak. eg: example.com"
   type        = string
-  default     = "openfirehawk.com"
+  default     = "service.consul"
 }
 
 variable "sleep" {
@@ -61,13 +61,30 @@ variable "vpc_cidr" {
 }
 
 variable "vpn_cidr" {
-  description = "The CIDR range that the vpn will assign to remote addresses within the vpc.  These are virtual DHCP addresses for routing traffic."
+  description = "The CIDR range that the vpn will assign using DHCP.  These are virtual addresses for routing traffic."
   type        = string
-  default     = "172.19.232.0/24"
 }
 
 variable "remote_ip_cidr" {
-  description = "The remote public address that will connect to the openvpn instance and other public instances.  This is used to limit inbound access to public facing hosts like the VPN from your site's public IP."
+  description = "The remote public address that will connect to the bastion instance and other public instances.  This is used to limit inbound access to public facing hosts like the VPN from your site's public IP."
+  type        = string
+  default     = null
+}
+
+variable "remote_cloud_private_ip_cidr" {
+  description = "The remote private address that will connect to the bastion instance and other public instances.  This is used to limit inbound access to public facing hosts like the VPN from your site's public IP."
+  type        = string
+  default     = null
+}
+
+variable "remote_cloud_public_ip_cidr" {
+  description = "The remote public address that will connect to the bastion instance and other public instances.  This is used to limit inbound access to public facing hosts like the VPN from your site's public IP."
+  type        = string
+  default     = null
+}
+
+variable "remote_ip_graphical_cidr" {
+  description = "The remote public address that will connect to the graphical bastion instance and other public instances.  This is used to limit inbound access to public facing hosts like the VPN from your site's public IP."
   type        = string
   default     = null
 }
@@ -88,10 +105,6 @@ variable "aws_private_key_path" {
   description = "The path to the AWS private PEM key for access to the VPN instance"
   type        = string
   default     = "~/.ssh/aws_key.pem"
-}
-
-locals { # if no key exists then private_key is blank
-  private_key = fileexists(var.aws_private_key_path) ? file(var.aws_private_key_path) : ""
 }
 
 variable "route_zone_id" {
@@ -170,6 +183,24 @@ variable "create_bastion" {
   description = "Optionally create a bastion resource for the VPC"
   type        = bool
   default     = false
+}
+
+variable "create_bastion_graphical" {
+  description = "Optionally create a graphical bastion resource for the VPC"
+  type        = bool
+  default     = false
+}
+
+variable "bastion_ami_id" {
+  description = "The prebuilt AMI for the bastion host. This should be a private ami you have build with packer."
+  type = string
+  default = null
+}
+
+variable "bastion_graphical_ami_id" {
+  description = "The prebuilt AMI for the graphical bastion host. This should be a private ami you have build with packer."
+  type = string
+  default = null
 }
 
 variable "create_openvpn" {
