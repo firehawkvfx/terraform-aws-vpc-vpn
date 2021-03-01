@@ -65,7 +65,7 @@ variable "vpn_cidr" {
   type        = string
 }
 
-variable "remote_ip_cidr" {
+variable "deployer_ip_cidr" {
   description = "The remote public address that will connect to the bastion instance and other public instances.  This is used to limit inbound access to public facing hosts like the VPN from your site's public IP."
   type        = string
   default     = null
@@ -83,13 +83,13 @@ variable "remote_cloud_public_ip_cidr" {
   default     = null
 }
 
-variable "remote_ip_graphical_cidr" {
+variable "onsite_public_ip_cidr" {
   description = "The remote public address that will connect to the graphical bastion instance and other public instances.  This is used to limit inbound access to public facing hosts like the VPN from your site's public IP."
   type        = string
   default     = null
 }
 
-variable "remote_subnet_cidr" {
+variable "onsite_private_subnet_cidr" {
   description = "The subnet CIDR Range of your onsite private subnet. This is also the subnet where your VPN client resides in. eg: 192.168.1.0/24"
   type        = string
   default     = null

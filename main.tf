@@ -196,7 +196,7 @@ resource "aws_security_group" "resolver" {
     protocol    = "tcp"
     from_port   = 53
     to_port     = 53
-    cidr_blocks = [var.vpc_cidr, var.vpn_cidr, var.remote_subnet_cidr, var.remote_ip_cidr]
+    cidr_blocks = [var.vpc_cidr, var.vpn_cidr, var.onsite_private_subnet_cidr, var.deployer_ip_cidr]
 
     description = "TCP traffic from vpc, vpn dhcp, and remote subnet"
   }
@@ -204,7 +204,7 @@ resource "aws_security_group" "resolver" {
     protocol    = "udp"
     from_port   = 53
     to_port     = 53
-    cidr_blocks = [var.vpc_cidr, var.vpn_cidr, var.remote_subnet_cidr, var.remote_ip_cidr]
+    cidr_blocks = [var.vpc_cidr, var.vpn_cidr, var.onsite_private_subnet_cidr, var.deployer_ip_cidr]
 
     description = "UDP traffic from vpc, vpn dhcp, and remote subnet"
   }
@@ -213,7 +213,7 @@ resource "aws_security_group" "resolver" {
     protocol    = "tcp"
     from_port   = 53
     to_port     = 53
-    cidr_blocks = [var.vpc_cidr, var.vpn_cidr, var.remote_subnet_cidr, var.remote_ip_cidr]
+    cidr_blocks = [var.vpc_cidr, var.vpn_cidr, var.onsite_private_subnet_cidr, var.deployer_ip_cidr]
 
     description = "TCP traffic to vpc, vpn dhcp, and remote subnet"
   }
@@ -221,7 +221,7 @@ resource "aws_security_group" "resolver" {
     protocol    = "udp"
     from_port   = 53
     to_port     = 53
-    cidr_blocks = [var.vpc_cidr, var.vpn_cidr, var.remote_subnet_cidr, var.remote_ip_cidr]
+    cidr_blocks = [var.vpc_cidr, var.vpn_cidr, var.onsite_private_subnet_cidr, var.deployer_ip_cidr]
 
     description = "UDP traffic to vpc, vpn dhcp, and remote subnet"
   }
@@ -269,7 +269,7 @@ module "consul_client_security_group" {
   create_vpc = var.create_vpc
   vpc_id                      = local.vpc_id
   vpc_cidr                    = var.vpc_cidr
-  remote_ip_cidr_list = [var.remote_ip_cidr, var.remote_cloud_private_ip_cidr, var.remote_cloud_public_ip_cidr]
+  permitted_cidr_list = [var.deployer_ip_cidr, var.remote_cloud_private_ip_cidr, var.remote_cloud_public_ip_cidr]
 }
 
 module "bastion" {
@@ -288,11 +288,11 @@ module "bastion" {
   vpc_id                      = local.vpc_id
   vpc_cidr                    = var.vpc_cidr
   vpn_cidr                    = var.vpn_cidr
-  remote_ip_cidr              = var.remote_ip_cidr
+  deployer_ip_cidr              = var.deployer_ip_cidr
   public_subnet_ids           = local.public_subnets
   public_subnets_cidr_blocks  = local.public_subnets_cidr_blocks
   # private_subnets_cidr_blocks = local.private_subnets_cidr_blocks
-  remote_subnet_cidr          = var.remote_subnet_cidr
+  onsite_private_subnet_cidr          = var.onsite_private_subnet_cidr
 
   aws_key_name       = var.aws_key_name
   aws_private_key_path = var.aws_private_key_path
@@ -328,12 +328,12 @@ module "bastion_graphical" {
   vpc_id                      = local.vpc_id
   vpc_cidr                    = var.vpc_cidr
   vpn_cidr                    = var.vpn_cidr
-  remote_ip_cidr              = var.remote_ip_cidr
-  remote_ip_graphical_cidr = var.remote_ip_graphical_cidr
+  deployer_ip_cidr              = var.deployer_ip_cidr
+  onsite_public_ip_cidr = var.onsite_public_ip_cidr
   public_subnet_ids           = local.public_subnets
   public_subnets_cidr_blocks  = local.public_subnets_cidr_blocks
   # private_subnets_cidr_blocks = local.private_subnets_cidr_blocks
-  remote_subnet_cidr          = var.remote_subnet_cidr
+  onsite_private_subnet_cidr          = var.onsite_private_subnet_cidr
 
   aws_key_name       = var.aws_key_name
   aws_private_key_path = var.aws_private_key_path
@@ -372,8 +372,8 @@ module "vpn" {
   vpc_cidr           = var.vpc_cidr
   vpn_cidr           = var.vpn_cidr
   public_subnet_ids  = local.public_subnets
-  remote_vpn_ip_cidr = var.remote_ip_cidr
-  remote_subnet_cidr = var.remote_subnet_cidr
+  remote_vpn_ip_cidr = var.deployer_ip_cidr
+  onsite_private_subnet_cidr = var.onsite_private_subnet_cidr
 
   private_route_table_ids = local.private_route_table_ids
   public_route_table_ids = local.public_route_table_ids

@@ -10,7 +10,7 @@ variable "create_vpc" {
     type = bool
 }
 
-variable "remote_ip_cidr_list" {
+variable "permitted_cidr_list" {
     type = list(string)
 }
 
@@ -52,17 +52,10 @@ resource "aws_security_group" "consul_client" {
     protocol    = "tcp"
     from_port   = 22
     to_port     = 22
-    cidr_blocks = var.remote_ip_cidr_list
+    cidr_blocks = var.permitted_cidr_list
     description = "ssh"
   }
 
-#   ingress {
-#     protocol    = "icmp"
-#     from_port   = 8
-#     to_port     = 0
-#     cidr_blocks = [var.remote_ip_cidr, var.remote_ip_graphical_cidr]
-#     description = "icmp"
-#   }
   egress {
     protocol    = "-1"
     from_port   = 0
